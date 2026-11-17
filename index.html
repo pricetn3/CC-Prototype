@@ -20,12 +20,16 @@
   .opt:hover { background: rgba(255,255,255,0.7); color: #181D27; }
   .opt.on { background: #fff; color: #181D27; font-weight: 600; box-shadow: 0 1px 2px rgba(10,13,18,0.08), 0 0 0 1px rgba(10,13,18,0.04); cursor: default; }
   .foot { margin-top: 14px; padding-top: 10px; border-top: 1px solid #E9EAEB; text-align: center; font: 400 11px/16px Inter, system-ui, sans-serif; color: #717680; }
+  .copy { margin-top: 12px; width: 100%; height: 32px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid #D5D7DA; border-radius: 8px; background: #fff; color: #414651; font: 600 13px/18px Inter, system-ui, sans-serif; cursor: pointer; box-shadow: 0 1px 2px rgba(10,13,18,0.05); }
+  .copy:hover { background: #FAFAFA; color: #181D27; }
+  .copy:focus-visible, .opt:focus-visible, .x:focus-visible, .tab:focus-visible { outline: 2px solid #3888C5; outline-offset: 2px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .tab { position: fixed; right: 0; top: 50%; transform: translateY(-50%); z-index: 10; height: 72px; width: 22px; border: 1px solid #E9EAEB; border-right: 0; border-radius: 10px 0 0 10px; background: #fff; color: #535862; box-shadow: 0 1px 2px rgba(10,13,18,0.05); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
 </style>
 </head>
 <body>
-<iframe id="v-internal" class="view on" src="internal.html?embed=1" title="Internal view"></iframe>
-<iframe id="v-external" class="view" src="external.html?embed=1" title="External view"></iframe>
+<iframe id="v-internal" class="view on" title="Internal view"></iframe>
+<iframe id="v-external" class="view" title="External view"></iframe>
 
 <div class="rail" id="rail">
   <button class="x" id="hide" aria-label="Hide panel"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
@@ -35,6 +39,8 @@
     <button class="opt on" data-view="internal">Internal</button>
     <button class="opt" data-view="external">External</button>
   </div>
+  <button class="copy" id="copy" type="button"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><span id="copy-t">Copy link</span></button>
+  <div class="sr" role="status" id="copied"></div>
   <div class="foot">Shift+H hides this panel</div>
 </div>
 <button class="tab" id="show" aria-label="Show prototype panel" hidden><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
@@ -43,7 +49,17 @@
 (function () {
   var frames = { internal: document.getElementById('v-internal'), external: document.getElementById('v-external') };
   var state = { internal: null, external: null };
-  var cur = location.hash === '#external' ? 'external' : 'internal';
+  // Shareable links: ?view=internal|external&page=...&org=...&tab=...&section=...&show=...&edit=1
+  var params = new URLSearchParams(location.search);
+  var cur = params.get('view') === 'external' || location.hash === '#external' ? 'external' : 'internal';
+  var lastQ = { internal: '', external: '' };
+  var linkQ = ''; params.forEach(function (v, k) { if (k !== 'view' && k !== 'embed') linkQ += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(v); });
+  frames.internal.src = 'internal.html?embed=1' + (cur === 'internal' ? linkQ : '');
+  frames.external.src = 'external.html?embed=1' + (cur === 'external' ? linkQ : '');
+  function setUrl() {
+    var q = lastQ[cur] ? lastQ[cur].replace(/^\?/, '&') : '';
+    try { history.replaceState(null, '', location.pathname + '?view=' + cur + q); } catch (e) {}
+  }
   var rail = document.getElementById('rail'), tab = document.getElementById('show');
 
   function keyOf(win) { return win === frames.internal.contentWindow ? 'internal' : win === frames.external.contentWindow ? 'external' : null; }
@@ -60,7 +76,7 @@
     var s = state[cur];
     if (s && s.handoff) frames[next].contentWindow.postMessage({ type: 'cc-sync', handoff: s.handoff }, '*');
     cur = next;
-    history.replaceState(null, '', next === 'external' ? '#external' : location.pathname + location.search);
+    setUrl();
     setTimeout(paint, 30);
   }
 
@@ -69,6 +85,7 @@
     if (!k) return;
     if (d.type === 'cc-state') state[k] = { screen: d.screen, signedOut: d.signedOut, handoff: d.handoff };
     if (d.type === 'cc-toggle-rail') setRail(rail.hidden);
+    if (d.type === 'cc-link' && typeof d.q === 'string') { lastQ[k] = d.q; if (k === cur) setUrl(); }
   });
   document.querySelectorAll('.opt').forEach(function (b) { b.addEventListener('click', function () { go(b.dataset.view); }); });
   document.getElementById('hide').addEventListener('click', function () { setRail(false); });
@@ -78,6 +95,17 @@
   var hidden = false; try { hidden = localStorage.getItem('cc-viewrail-hidden') === '1'; } catch (e) {}
   setRail(!hidden);
   paint();
+  var copyBtn = document.getElementById('copy'), copyT = document.getElementById('copy-t'), copied = document.getElementById('copied'), copyTimer;
+  copyBtn.addEventListener('click', function () {
+    var url = location.href;
+    function done(ok) {
+      copyT.textContent = ok ? 'Link copied' : 'Copy failed';
+      copied.textContent = ok ? 'Link to this screen copied' : 'Could not copy the link';
+      clearTimeout(copyTimer); copyTimer = setTimeout(function () { copyT.textContent = 'Copy link'; copied.textContent = ''; }, 2000);
+    }
+    function fallback() { try { var t = document.createElement('textarea'); t.value = url; t.setAttribute('readonly', ''); t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); var ok = document.execCommand('copy'); document.body.removeChild(t); done(ok); } catch (e) { done(false); } }
+    try { if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(url).then(function () { done(true); }, fallback); else fallback(); } catch (e) { fallback(); }
+  });
 })();
 </script>
 </body>
