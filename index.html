@@ -25,6 +25,29 @@
   .copy:focus-visible, .opt:focus-visible, .x:focus-visible, .tab:focus-visible { outline: 2px solid #3888C5; outline-offset: 2px; }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .tab { position: fixed; right: 0; top: 50%; transform: translateY(-50%); z-index: 10; height: 72px; width: 22px; border: 1px solid #E9EAEB; border-right: 0; border-radius: 10px 0 0 10px; background: #fff; color: #535862; box-shadow: 0 1px 2px rgba(10,13,18,0.05); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+  .pbox { margin-top: 6px; padding: 8px 9px; border-radius: 10px; background: #F5F5F5; }
+  .prole { font: 600 13px/18px Inter, system-ui, sans-serif; color: #181D27; }
+  .psum { font: 400 12px/16px Inter, system-ui, sans-serif; color: #535862; }
+  .pedit { margin-top: 6px; width: 100%; height: 30px; border: 1px solid #D5D7DA; border-radius: 8px; background: #fff; box-shadow: 0 1px 2px rgba(10,13,18,0.05); cursor: pointer; font: 600 12px/16px Inter, system-ui, sans-serif; color: #414651; }
+  .pedit:hover { background: #FAFAFA; color: #181D27; }
+  .pp { position: fixed; right: 196px; top: 50%; transform: translateY(-50%); z-index: 11; width: 400px; max-width: calc(100vw - 220px); max-height: 86vh; display: flex; flex-direction: column; box-sizing: border-box; background: #fff; border-radius: 16px; box-shadow: 0 16px 40px -8px rgba(10,13,18,0.22), 0 2px 6px rgba(10,13,18,0.06); font-family: Inter, system-ui, sans-serif; }
+  .pp[hidden] { display: none; }
+  .pp-h { position: relative; padding: 16px 18px 12px; border-bottom: 1px solid #E9EAEB; }
+  .pp-h h2 { margin: 0; font: 600 15px/22px Inter, system-ui, sans-serif; color: #181D27; outline: none; }
+  .pp-h p { margin: 2px 0 0; font: 400 13px/18px Inter, system-ui, sans-serif; color: #535862; }
+  .pp-x { position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; border-radius: 8px; border: 0; background: transparent; color: #717680; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+  .pp-x:hover { background: #F5F5F5; color: #181D27; }
+  .pp-b { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 14px 18px 18px; }
+  .pp-role { display: flex; gap: 10px; padding: 12px 14px; border: 1px solid #E9EAEB; border-radius: 12px; cursor: pointer; margin-bottom: 10px; }
+  .pp-role.on { border-color: #1D6FB0; background: #F0F7FC; }
+  .pp-role input, .pp-ck input { width: 16px; height: 16px; margin: 2px 0 0; flex-shrink: 0; }
+  .pp-rt { display: block; font: 500 14px/20px Inter, system-ui, sans-serif; color: #181D27; }
+  .pp-rd { display: block; font: 400 13px/18px Inter, system-ui, sans-serif; color: #535862; }
+  .pp-g { margin-top: 14px; font: 600 12px/18px Inter, system-ui, sans-serif; color: #414651; }
+  .pp-ck { display: flex; gap: 10px; padding: 6px 0; cursor: pointer; font: 400 14px/20px Inter, system-ui, sans-serif; color: #181D27; }
+  .pp-ck small { display: block; font: 400 12px/16px Inter, system-ui, sans-serif; color: #535862; }
+  .pp-note { font: 400 13px/18px Inter, system-ui, sans-serif; color: #535862; margin: 4px 0 0; }
+  .pedit:focus-visible, .pp-x:focus-visible, .pp input:focus-visible { outline: 2px solid #3888C5; outline-offset: 2px; }
 </style>
 </head>
 <body>
@@ -39,9 +62,16 @@
     <button class="opt on" data-view="internal">Internal</button>
     <button class="opt" data-view="external">External</button>
   </div>
+  <div class="lbl" style="margin-top:14px;">Permissions</div>
+  <div class="pbox"><div class="prole" id="p-role">IT Admin</div><div class="psum" id="p-sum">All permissions</div></div>
+  <button class="pedit" id="p-edit" type="button" aria-expanded="false" aria-controls="perm-panel">Edit permissions</button>
   <button class="copy" id="copy" type="button"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><span id="copy-t">Copy link</span></button>
   <div class="sr" role="status" id="copied"></div>
   <div class="foot">Shift+H hides this panel</div>
+</div>
+<div class="pp" id="perm-panel" role="dialog" aria-labelledby="pp-title" hidden>
+  <div class="pp-h"><h2 id="pp-title" tabindex="-1"></h2><p>See the prototype as a user with these permissions. Changes apply right away.</p><button class="pp-x" id="pp-close" type="button" aria-label="Close permissions"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div>
+  <div class="pp-b" id="pp-body"></div>
 </div>
 <button class="tab" id="show" aria-label="Show prototype panel" hidden><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
 
@@ -64,7 +94,7 @@
 
   function keyOf(win) { return win === frames.internal.contentWindow ? 'internal' : win === frames.external.contentWindow ? 'external' : null; }
   function setRail(open) {
-    rail.hidden = !open; tab.hidden = open;
+    rail.hidden = !open; tab.hidden = open; if (!open && pPanel && !pPanel.hidden) { pPanel.hidden = true; pEdit.setAttribute('aria-expanded', 'false'); }
     try { localStorage.setItem('cc-viewrail-hidden', open ? '0' : '1'); } catch (e) {}
   }
   function paint() {
@@ -77,7 +107,7 @@
     if (s && s.handoff) frames[next].contentWindow.postMessage({ type: 'cc-sync', handoff: s.handoff }, '*');
     cur = next;
     setUrl();
-    setTimeout(paint, 30);
+    setTimeout(function () { paint(); permPaint(); }, 30);
   }
 
   window.addEventListener('message', function (e) {
@@ -106,6 +136,48 @@
     function fallback() { try { var t = document.createElement('textarea'); t.value = url; t.setAttribute('readonly', ''); t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); var ok = document.execCommand('copy'); document.body.removeChild(t); done(ok); } catch (e) { done(false); } }
     try { if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(url).then(function () { done(true); }, fallback); else fallback(); } catch (e) { fallback(); }
   });
+
+  // Permissions: the same switch as the canvas side panel. Both views read cc-perm-int / cc-perm-ext and update on change.
+  var PERMS = {"internal": {"groups": [{"key": "orders", "label": "Orders", "items": [["manageOrders", "Manage orders"]]}, {"key": "orgs", "label": "Organizations", "items": [["manageOrgs", "Manage organizations"], ["manageOrgSettings", "Manage organization configuration", "Edit the Settings tab on organization profiles and country shipping in Admin. Everyone can view these and the Action log."]]}, {"key": "users", "label": "Users", "items": [["addFirstUser", "Add first user to organizations"]]}, {"key": "docs", "label": "Documents", "items": [["manageClientDocs", "Manage client documents"], ["manageHelpfulDocs", "Manage helpful documents"]]}, {"key": "reorders", "label": "Reorder Management", "items": [["manageReorders", "Manage reorders"]]}, {"key": "holds", "label": "Hold Management", "items": [["manageHolds", "Manage hold records"]]}, {"key": "reports", "label": "Reports", "items": [["viewCredReports", "View credential reports"], ["viewReorderReports", "View student reorder reports"]]}], "roles": {"admin": ["IT Admin", "Full access to view and manage all areas of the platform, including orders, organizations, users, signatures, documents, and reports."], "standard": ["Standard", "View-only access to orders, organizations, users, signatures, and documents, with optional permissions to manage specific areas of the platform."]}}, "external": {"groups": [{"key": "orders", "label": "Orders", "items": [["manageOrders", "Manage orders"], ["manageDigital", "Manage digital credentials", "Download CeCredentials, send authorization links, and update credential status (valid or invalid)"]]}, {"key": "org", "label": "Organization", "cols": 2, "items": [["viewOrgProfile", "View organization profile"], ["manageContacts", "Manage contacts"], ["manageShipping", "Manage shipping information"], ["managePunct", "Manage punctuation data"], ["manageBilling", "Manage billing information"]]}, {"key": "users", "label": "Users", "items": [["viewUsers", "View users"], ["addUsers", "Add users"]]}, {"key": "sigs", "label": "Signatures", "items": [["viewSignatures", "View signatures"], ["manageSignatures", "Manage signatures"]]}, {"key": "reorders", "label": "Reorder Management", "items": [["manageReorders", "Manage reorders"]]}, {"key": "holds", "label": "Hold Management", "items": [["manageHolds", "Manage hold records"]]}, {"key": "reports", "label": "Reports", "items": [["viewCredReports", "View credential reports"], ["viewReorderReports", "View student reorder reports"]]}], "roles": {"admin": ["Admin", "Full access to view and manage all areas of the platform, including orders, organizations, users, signatures, documents, and reports."], "standard": ["Standard", "View-only access to orders, organizations, and documents, with optional permissions to manage specific areas of the platform."]}}};
+  var pPanel = document.getElementById('perm-panel'), pEdit = document.getElementById('p-edit'), pBody = document.getElementById('pp-body');
+  function pKey() { return 'cc-perm-' + (cur === 'external' ? 'ext' : 'int'); }
+  function pRead() { var v = null; try { v = JSON.parse(localStorage.getItem(pKey()) || 'null'); } catch (e) {} if (!v || (v.role !== 'admin' && v.role !== 'standard')) v = { role: 'admin', perms: {} }; if (!v.perms) v.perms = {}; return v; }
+  function pWrite(v) { var k = pKey(), nv = JSON.stringify(v); try { localStorage.setItem(k, nv); } catch (e) {} Object.keys(frames).forEach(function (f) { try { var w = frames[f].contentWindow; w.dispatchEvent(new w.StorageEvent('storage', { key: k, newValue: nv })); } catch (e) {} }); permPaint(); }
+  function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function permPaint() {
+    var d = PERMS[cur], v = pRead(), all = [];
+    d.groups.forEach(function (g) { g.items.forEach(function (i) { all.push(i[0]); }); });
+    var n = all.filter(function (k) { return v.perms[k]; }).length;
+    document.getElementById('p-role').textContent = v.role === 'standard' ? d.roles.standard[0] + ' user' : d.roles.admin[0];
+    document.getElementById('p-sum').textContent = v.role === 'standard' ? n + ' of ' + all.length + ' additional permissions' : 'All permissions';
+    if (pPanel.hidden) return;
+    var focusId = document.activeElement && pPanel.contains(document.activeElement) ? document.activeElement.id : '';
+    document.getElementById('pp-title').textContent = 'Permissions: ' + (cur === 'external' ? 'External' : 'Internal') + ' view';
+    var h = '<div role="radiogroup" aria-label="Access">';
+    ['admin', 'standard'].forEach(function (r) { h += '<label class="pp-role' + (v.role === r ? ' on' : '') + '" for="pp-r-' + r + '"><input type="radio" name="pp-role" id="pp-r-' + r + '" value="' + r + '"' + (v.role === r ? ' checked' : '') + '><span><span class="pp-rt">' + esc(d.roles[r][0]) + '</span><span class="pp-rd">' + esc(d.roles[r][1]) + '</span></span></label>'; });
+    h += '</div>';
+    if (v.role === 'standard') {
+      h += '<p class="pp-note">Additional permissions</p>';
+      d.groups.forEach(function (g) {
+        h += '<div class="pp-g" id="pp-g-' + g.key + '">' + esc(g.label) + '</div><div role="group" aria-labelledby="pp-g-' + g.key + '">';
+        g.items.forEach(function (i) { h += '<label class="pp-ck" for="pp-p-' + i[0] + '"><input type="checkbox" id="pp-p-' + i[0] + '" data-k="' + i[0] + '"' + (v.perms[i[0]] ? ' checked' : '') + '><span>' + esc(i[1]) + (i[2] ? '<small>' + esc(i[2]) + '</small>' : '') + '</span></label>'; });
+        h += '</div>';
+      });
+    } else h += '<p class="pp-note">' + esc(d.roles.admin[0]) + ' has every permission. Choose Standard to turn individual permissions on or off.</p>';
+    pBody.innerHTML = h;
+    if (focusId) { var f = document.getElementById(focusId); if (f) f.focus(); }
+  }
+  pBody.addEventListener('change', function (e) {
+    var t = e.target, v = pRead();
+    if (t.name === 'pp-role') v.role = t.value; else if (t.dataset.k) v.perms[t.dataset.k] = t.checked;
+    pWrite(v);
+  });
+  function pOpen(open) { pPanel.hidden = !open; pEdit.setAttribute('aria-expanded', open ? 'true' : 'false'); permPaint(); if (open) document.getElementById('pp-title').focus(); else pEdit.focus(); }
+  pEdit.addEventListener('click', function () { pOpen(pPanel.hidden); });
+  document.getElementById('pp-close').addEventListener('click', function () { pOpen(false); });
+  pPanel.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); pOpen(false); } });
+  window.addEventListener('storage', function (e) { if (e.key && e.key.indexOf('cc-perm-') === 0) permPaint(); });
+  permPaint();
 })();
 </script>
 </body>
