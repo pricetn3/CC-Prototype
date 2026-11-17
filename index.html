@@ -83,11 +83,16 @@
   var params = new URLSearchParams(location.search);
   var cur = params.get('view') === 'external' || location.hash === '#external' ? 'external' : 'internal';
   var lastQ = { internal: '', external: '' };
-  var linkQ = ''; params.forEach(function (v, k) { if (k !== 'view' && k !== 'embed') linkQ += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(v); });
+  // Links set who you're viewing as: &role=standard (optional &perms=key1,key2). A link without role opens as IT Admin.
+  (function () { var r = params.get('role') || (params.get('page') ? 'admin' : null); if (r !== 'standard' && r !== 'admin') return; var v = { role: r, perms: {} };
+    (params.get('perms') || '').split(',').filter(Boolean).forEach(function (k) { v.perms[k] = true; });
+    try { localStorage.setItem('cc-perm-' + (cur === 'external' ? 'ext' : 'int'), JSON.stringify(v)); } catch (e) {} })();
+  var linkQ = ''; params.forEach(function (v, k) { if (k !== 'view' && k !== 'embed' && k !== 'role' && k !== 'perms') linkQ += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(v); });
   frames.internal.src = 'internal.html?embed=1' + (cur === 'internal' ? linkQ : '');
   frames.external.src = 'external.html?embed=1' + (cur === 'external' ? linkQ : '');
   function setUrl() {
     var q = lastQ[cur] ? lastQ[cur].replace(/^\?/, '&') : '';
+    var pv = pRead(); if (pv.role === 'standard') { q += '&role=standard'; var ks = Object.keys(pv.perms).filter(function (k) { return pv.perms[k]; }); if (ks.length) q += '&perms=' + ks.join(','); }
     try { history.replaceState(null, '', location.pathname + '?view=' + cur + q); } catch (e) {}
   }
   var rail = document.getElementById('rail'), tab = document.getElementById('show');
@@ -142,7 +147,7 @@
   var pPanel = document.getElementById('perm-panel'), pEdit = document.getElementById('p-edit'), pBody = document.getElementById('pp-body');
   function pKey() { return 'cc-perm-' + (cur === 'external' ? 'ext' : 'int'); }
   function pRead() { var v = null; try { v = JSON.parse(localStorage.getItem(pKey()) || 'null'); } catch (e) {} if (!v || (v.role !== 'admin' && v.role !== 'standard')) v = { role: 'admin', perms: {} }; if (!v.perms) v.perms = {}; return v; }
-  function pWrite(v) { var k = pKey(), nv = JSON.stringify(v); try { localStorage.setItem(k, nv); } catch (e) {} Object.keys(frames).forEach(function (f) { try { var w = frames[f].contentWindow; w.dispatchEvent(new w.StorageEvent('storage', { key: k, newValue: nv })); } catch (e) {} }); permPaint(); }
+  function pWrite(v) { var k = pKey(), nv = JSON.stringify(v); try { localStorage.setItem(k, nv); } catch (e) {} Object.keys(frames).forEach(function (f) { try { var w = frames[f].contentWindow; w.dispatchEvent(new w.StorageEvent('storage', { key: k, newValue: nv })); } catch (e) {} }); permPaint(); setUrl(); }
   function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function permPaint() {
     var d = PERMS[cur], v = pRead(), all = [];
