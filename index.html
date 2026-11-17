@@ -62,6 +62,14 @@
     <button class="opt on" data-view="internal">Internal</button>
     <button class="opt" data-view="external">External</button>
   </div>
+  <div id="setup-box" hidden>
+    <div class="lbl" style="margin-top:14px;">Org settings</div>
+    <div class="grp" id="setup-grp">
+      <button class="opt" type="button" data-scn="all" aria-pressed="false">All set up</button>
+      <button class="opt" type="button" data-scn="mixed" aria-pressed="false">Mixed</button>
+      <button class="opt" type="button" data-scn="new" aria-pressed="false">New organization</button>
+    </div>
+  </div>
   <div class="lbl" style="margin-top:14px;">Permissions</div>
   <div class="pbox"><div class="prole" id="p-role">IT Admin</div><div class="psum" id="p-sum">All permissions</div></div>
   <button class="pedit" id="p-edit" type="button" aria-expanded="false" aria-controls="perm-panel">Edit permissions</button>
@@ -104,7 +112,7 @@
   }
   function paint() {
     Object.keys(frames).forEach(function (k) { frames[k].classList.toggle('on', k === cur); });
-    document.querySelectorAll('.opt').forEach(function (b) { b.classList.toggle('on', b.dataset.view === cur); });
+    document.querySelectorAll('.opt[data-view]').forEach(function (b) { b.classList.toggle('on', b.dataset.view === cur); }); setupPaint();
   }
   function go(next) {
     if (next === cur) return;
@@ -120,9 +128,18 @@
     if (!k) return;
     if (d.type === 'cc-state') state[k] = { screen: d.screen, signedOut: d.signedOut, handoff: d.handoff };
     if (d.type === 'cc-toggle-rail') setRail(rail.hidden);
-    if (d.type === 'cc-link' && typeof d.q === 'string') { lastQ[k] = d.q; if (k === cur) setUrl(); }
+    if (d.type === 'cc-link' && typeof d.q === 'string') { lastQ[k] = d.q; if (k === cur) setUrl(); setupPaint(); }
   });
-  document.querySelectorAll('.opt').forEach(function (b) { b.addEventListener('click', function () { go(b.dataset.view); }); });
+  document.querySelectorAll('.opt[data-view]').forEach(function (b) { b.addEventListener('click', function () { go(b.dataset.view); }); });
+  // Org settings: puts the open organization's Settings tab into a known state (internal view only).
+  var setupBox = document.getElementById('setup-box'), scnOn = '', scnOrg = '';
+  function setupPaint() {
+    var q = lastQ.internal || ''; var onSettings = cur === 'internal' && /page=org\b/.test(q) && /tab=settings\b/.test(q);
+    var org = (/[?&]org=(\d+)/.exec(q) || [])[1] || ''; if (org !== scnOrg) { scnOn = ''; scnOrg = org; }
+    setupBox.hidden = !onSettings;
+    document.querySelectorAll('.opt[data-scn]').forEach(function (b) { var on = b.dataset.scn === scnOn; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+  }
+  document.querySelectorAll('.opt[data-scn]').forEach(function (b) { b.addEventListener('click', function () { scnOn = b.dataset.scn; frames.internal.contentWindow.postMessage({ type: 'cc-setup-scn', scn: scnOn }, '*'); setupPaint(); }); });
   document.getElementById('hide').addEventListener('click', function () { setRail(false); });
   tab.addEventListener('click', function () { setRail(true); });
   window.addEventListener('keydown', function (e) { if (e.shiftKey && (e.key === 'H' || e.key === 'h')) setRail(rail.hidden); });
