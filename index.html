@@ -69,6 +69,10 @@
       <button class="opt" type="button" data-scn="mixed" aria-pressed="false">Mixed</button>
       <button class="opt" type="button" data-scn="new" aria-pressed="false">New organization</button>
     </div>
+    <div class="grp" role="group" aria-label="Settings layout" style="flex-direction:row;">
+      <button class="opt" type="button" data-sv="1" aria-pressed="false" style="flex:1;justify-content:center;">V1</button>
+      <button class="opt" type="button" data-sv="2" aria-pressed="false" style="flex:1;justify-content:center;">V2</button>
+    </div>
   </div>
   <div class="lbl" style="margin-top:14px;">Permissions</div>
   <div class="pbox"><div class="prole" id="p-role">IT Admin</div><div class="psum" id="p-sum">All permissions</div></div>
@@ -139,6 +143,10 @@
     setupBox.hidden = !onSettings;
     document.querySelectorAll('.opt[data-scn]').forEach(function (b) { var on = b.dataset.scn === scnOn; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
   }
+  function svCur() { try { return localStorage.getItem('cc-settings-v') === '2' ? '2' : '1'; } catch (e) { return '1'; } }
+  function svPaint() { var v = svCur(); document.querySelectorAll('.opt[data-sv]').forEach(function (b) { var on = b.dataset.sv === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }); }
+  document.querySelectorAll('.opt[data-sv]').forEach(function (b) { b.addEventListener('click', function () { try { localStorage.setItem('cc-settings-v', b.dataset.sv); } catch (e) {} frames.internal.contentWindow.postMessage({ type: 'cc-settings-v', v: b.dataset.sv }, '*'); svPaint(); }); });
+  svPaint();
   document.querySelectorAll('.opt[data-scn]').forEach(function (b) { b.addEventListener('click', function () { scnOn = b.dataset.scn; frames.internal.contentWindow.postMessage({ type: 'cc-setup-scn', scn: scnOn }, '*'); setupPaint(); }); });
   document.getElementById('hide').addEventListener('click', function () { setRail(false); });
   tab.addEventListener('click', function () { setRail(true); });
