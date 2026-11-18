@@ -72,6 +72,7 @@
     <div class="grp" role="group" aria-label="Settings layout" style="flex-direction:row;">
       <button class="opt" type="button" data-sv="1" aria-pressed="false" style="flex:1;justify-content:center;">V1</button>
       <button class="opt" type="button" data-sv="2" aria-pressed="false" style="flex:1;justify-content:center;">V2</button>
+      <button class="opt" type="button" data-sv="4" aria-pressed="false" style="flex:1;justify-content:center;">V4</button>
     </div>
   </div>
   <div class="lbl" style="margin-top:14px;">Permissions</div>
@@ -143,7 +144,7 @@
     setupBox.hidden = !onSettings;
     document.querySelectorAll('.opt[data-scn]').forEach(function (b) { var on = b.dataset.scn === scnOn; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
   }
-  function svCur() { try { return localStorage.getItem('cc-settings-v') === '2' ? '2' : '1'; } catch (e) { return '1'; } }
+  function svCur() { try { var v = localStorage.getItem('cc-settings-v'); return v === '2' || v === '4' ? v : '1'; } catch (e) { return '1'; } }
   function svPaint() { var v = svCur(); document.querySelectorAll('.opt[data-sv]').forEach(function (b) { var on = b.dataset.sv === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }); }
   document.querySelectorAll('.opt[data-sv]').forEach(function (b) { b.addEventListener('click', function () { try { localStorage.setItem('cc-settings-v', b.dataset.sv); } catch (e) {} frames.internal.contentWindow.postMessage({ type: 'cc-settings-v', v: b.dataset.sv }, '*'); svPaint(); }); });
   svPaint();
