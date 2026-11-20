@@ -48,6 +48,10 @@
   .pp-ck small { display: block; font: 400 12px/16px Inter, system-ui, sans-serif; color: #535862; }
   .pp-note { font: 400 13px/18px Inter, system-ui, sans-serif; color: #535862; margin: 4px 0 0; }
   .pedit:focus-visible, .pp-x:focus-visible, .pp input:focus-visible { outline: 2px solid #3888C5; outline-offset: 2px; }
+  .osel { margin-top: 6px; width: 100%; height: 32px; box-sizing: border-box; padding: 0 28px 0 9px; border: 0; border-radius: 8px; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23535862' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 9px center; box-shadow: 0 1px 2px rgba(10,13,18,0.05), inset 0 0 0 1px #D5D7DA; appearance: none; -webkit-appearance: none; cursor: pointer; font: 500 13px/18px Inter, system-ui, sans-serif; color: #181D27; text-overflow: ellipsis; }
+  .osel:hover { background-color: #FAFAFA; }
+  .osel:focus-visible { outline: none; box-shadow: 0 1px 2px rgba(10,13,18,0.05), 0 0 0 2px #155EEF; }
+  #org-box[hidden] { display: none; }
 </style>
 </head>
 <body>
@@ -61,6 +65,13 @@
   <div class="grp">
     <button class="opt on" data-view="internal">Internal</button>
     <button class="opt" data-view="external">External</button>
+  </div>
+  <div id="org-box" hidden>
+    <label class="lbl" for="org-sel" style="display:block; margin-top:14px;">Organization</label>
+    <select class="osel" id="org-sel">
+      <option value="vhu">Virginia Hanock University</option>
+      <option value="cfa">CFA Institute</option>
+    </select>
   </div>
   <div id="setup-box" hidden>
     <div class="lbl" style="margin-top:14px;">Org settings</div>
@@ -117,7 +128,7 @@
   }
   function paint() {
     Object.keys(frames).forEach(function (k) { frames[k].classList.toggle('on', k === cur); });
-    document.querySelectorAll('.opt[data-view]').forEach(function (b) { b.classList.toggle('on', b.dataset.view === cur); }); setupPaint();
+    document.querySelectorAll('.opt[data-view]').forEach(function (b) { b.classList.toggle('on', b.dataset.view === cur); }); setupPaint(); orgPaint();
   }
   function go(next) {
     if (next === cur) return;
@@ -136,6 +147,16 @@
     if (d.type === 'cc-link' && typeof d.q === 'string') { lastQ[k] = d.q; if (k === cur) setUrl(); setupPaint(); }
   });
   document.querySelectorAll('.opt[data-view]').forEach(function (b) { b.addEventListener('click', function () { go(b.dataset.view); }); });
+  // Organization (External view only): which school the external user belongs to. Same switch as the canvas panel:
+  // stored in localStorage cc-ext-org, and the External page listens for the cc-ext-org event.
+  var orgBox = document.getElementById('org-box'), orgSel = document.getElementById('org-sel');
+  function orgCur() { try { return localStorage.getItem('cc-ext-org') === 'cfa' ? 'cfa' : 'vhu'; } catch (e) { return 'vhu'; } }
+  function orgPaint() { orgBox.hidden = cur !== 'external'; orgSel.value = orgCur(); }
+  orgSel.addEventListener('change', function () {
+    var k = orgSel.value === 'cfa' ? 'cfa' : 'vhu';
+    try { localStorage.setItem('cc-ext-org', k); } catch (e) {}
+    try { var w = frames.external.contentWindow; w.dispatchEvent(new w.CustomEvent('cc-ext-org', { detail: k })); } catch (e) {}
+  });
   // Org settings: puts the open organization's Settings tab into a known state (internal view only).
   var setupBox = document.getElementById('setup-box'), scnOn = '', scnOrg = '';
   function setupPaint() {
